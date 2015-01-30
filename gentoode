@@ -1,0 +1,103 @@
+    #!/bin/bash
+     
+    # Monta y desmonta ^-^ lo necesario para crear un live iso de gentoo
+     
+    if [[ $EUID -ne 0 ]]; then
+    echo "Este script solo lo puede usar root" 1>&2
+    echo "Usa: sudo bash <$0>"
+    exit 1
+    fi
+     
+    function usage() {
+     
+    uso="Uso:\n\nMontar: sudo bash $0 -m\nDesmontar: sudo bash $0 -d"
+    echo -e $uso
+     
+    }
+     
+    if [ $# -eq 1 ]; then
+     
+    distfiles="usr/portage/distfiles"
+    my_dir="/home/galleguindio" # Directorio de las sources,edita esta parte
+     
+    if [ -d $my_dir ]; then
+     
+    case $1 in
+     
+    -m)
+     
+    echo "Cambiando directorio..."
+     
+    sleep 1; cd "$my_dir"
+     
+    cp /etc/resolv.conf "etc/"
+     
+    if [ -d $distfiles ]; then
+     
+    echo -n ""
+     
+    else
+     
+    echo "Creando distfiles..."
+     
+    mkdir "usr/portage/distfiles"
+     
+    fi
+     
+    declare -a puntos=('proc' 'sys' 'dev' 'usr/portage/distfiles' ); i=0
+     
+    while [ $i -lt ${#puntos[*]} ]; do
+     
+    echo "Montando ${puntos[$i]}..."
+     
+    sleep 1;
+     
+    mount -o bind /${puntos[$i]} ${puntos[$i]}/
+     
+    if [ $? -eq 0 ]; then
+    let i=i+1
+    continue;
+    else
+    exit 1;
+    fi
+     
+    done
+     
+    echo "Chrooting..."
+     
+    sleep 2;
+     
+    chroot . /bin/bash --login;;
+     
+    -d)
+     
+    cd "$my_dir"
+     
+    echo "Desmontando..."
+     
+    sleep 1;
+     
+    umount proc sys dev usr/portage/distfiles
+     
+    case $? in
+    0)
+    echo "Listo :D"
+    sleep 1; clear ;;
+    *)
+    echo " " ;;
+    esac ;;
+     
+    *)
+    usage;;
+    esac
+     
+    else
+    echo "No existe $my_dir"
+    exit 1;
+    fi
+     
+    else
+    usage
+    fi
+
+

@@ -1,4 +1,18 @@
 #!/bin/bash
+#####################################
+#	UISOMake - Personalize ISO		#
+#	~~~~~~~~~~~~~~~~~~~~~~~~~~		#
+#									#
+#	Version:	0.5					#
+#	Date:		02/13/2015			#
+#	License:	GPL3 or later		#
+#	Author:		Diego G. Calbo		#
+#	Email:		dgcalbo@gmail.com	#
+#									#
+#	Script based in:				#
+#	Daniel Olivera's and			#
+#	Galleguindio's scripts			#
+#####################################
 
 #########################
 #	Verify ROOT user	#

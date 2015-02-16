@@ -51,13 +51,13 @@ function create() {
 	then
 		echo "Creating '$XS' directory."
 		mkdir -p $XS
-		echo "Done."
+		echo "Done!"
 		echo "Creating '$XS/cdimage' directory."
 		mkdir -p $XS/cdimage
-		echo "Done."
+		echo "Done!"
 		echo "Creating '$XS/image' directory."
 		mkdir -p $XS/image
-		echo "Done."
+		echo "Done!"
 		echo ""
 		echo "Environment created!"
 	else
@@ -78,7 +78,7 @@ function delete() {
 	then
 		echo "Deleting '$XS' directory."
 		rm -rf $XS
-		echo "Done."
+		echo "Done!"
 		echo ""
 		echo "Environment deleted!"
 	else
@@ -95,7 +95,7 @@ function mount_source() {
 		mkdir -p /mnt
 		mkdir -p /mnt/UISOMaker
 		mkdir -p /mnt/UISOMaker/XS-VIVO
-		echo "Done."
+		echo "Done!"
 		echo ""
 		echo -e "INFORMATION\n==========="
 		echo "Directory created:"
@@ -105,7 +105,7 @@ function mount_source() {
 	read -p "Select path to the original file ISO: " path
 	echo "Mounting the original ISO."
 	mount -t iso9660 -o loop $path /mnt/UISOMaker/XS-VIVO
-	echo "Done."
+	echo "Done!"
 	echo ""
 }
 
@@ -117,7 +117,7 @@ function mount_squashfs() {
 		mkdir -p /mnt
 		mkdir -p /mnt/UISOMaker
 		mkdir -p /mnt/UISOMaker/XSimage
-		echo "Done."
+		echo "Done!"
 		echo ""
 		echo -e "INFORMATION\n==========="
 		echo "Directory created:"
@@ -126,7 +126,7 @@ function mount_squashfs() {
 	echo ""
 	echo "Mounting the squashfs image."
 	mount -t squashfs -o loop /mnt/UISOMaker/XS-VIVO/image.squashfs /mnt/UISOMaker/XSimage
-	echo "Done."
+	echo "Done!"
 	echo ""
 }
 
@@ -134,13 +134,13 @@ function umount_sources() {
 	clear
 	echo "Umounting /mnt/UISOMaker/XSimage"
 	umount /mnt/UISOMaker/XSimage
-	echo "Done."
+	echo "Done!"
 	echo "Umounting /mnt/UISOMaker/XS-VIVO"
 	umount /mnt/UISOMaker/XS-VIVO
-	echo "Done."
+	echo "Done!"
 	echo "Deleting /mnt/UISOMaker"
 	rm -rf /mnt/UISOMaker
-	echo "Done."
+	echo "Done!"
 	echo ""
 }
 
@@ -151,7 +151,7 @@ function copyto_cdimage() {
 	sleep 1
 	cp_progress /mnt/UISOMaker/XS-VIVO $XS/cdimage
 	echo ""
-	echo "Done."
+	echo "Done!"
 	echo ""
 }
 
@@ -162,7 +162,7 @@ function copyto_image() {
 	sleep 1
 	cp_progress /mnt/UISOMaker/XSimage $XS/image
 	echo ""
-	echo "Done."
+	echo "Done!"
 	echo ""
 }
 
@@ -171,8 +171,8 @@ function cp_progress()
 	cp -a $1/* $2 2>/dev/null &
 	job=$!
 	start=$(date +%s)
-    delay=0.5
-    spinstr='|/-\'
+	delay=0.5
+	spinstr='|/-\'
 	clear
 	while [ "$(ps a | awk '{print $1}' | grep $job)" ]
 	do
@@ -180,10 +180,10 @@ function cp_progress()
 		now=$(date +%s)
 		elapse=$(($now - $start))
 		printf " [%c]  Copying... Elapsed Time %02dm %02ds" "$spinstr" "$(($elapse / 60))" "$(($elapse % 60))"
-        spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
+		spinstr=$temp${spinstr%"$temp"}
+		sleep $delay
 		printf "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-    done
+	done
 	clear
 	printf "Copied %s files in %02dm %02ds" "$((`find $2 -type f | wc -l`))" "$(($elapse / 60))" "$(($elapse % 60))"
 }
@@ -209,7 +209,7 @@ function chroot_image() {
 			exit 1;
 		fi
 	done
-	echo "Done."
+	echo "Done!"
 	sleep 1
 	clear
 	echo "Entying to 'chroot' mode."
@@ -234,7 +234,6 @@ function chroot_image() {
 			sleep 1
 			exit 1;
 		fi
-
 	done
 	echo "Done!"
 	#rm -rf $XS/image/proc
@@ -242,6 +241,26 @@ function chroot_image() {
 	clear
 	echo "Welcome back!!!"
 	echo "You're in your REAL SYSTEM, be carefully."
+}
+
+function new_version() {
+	clear
+	echo "The actual ISO version is:	`cat $XS/image/ututo.lastversion`"
+	echo ""
+	read -p "Write the new ISO version:	" nversion
+	echo $nversion > $XS/image/ututo.lastversion
+	echo ""
+	echo "The new ISO version is:		`cat $XS/image/ututo.lastversion`"
+	sleep 1
+	echo ""
+	echo "Done!"
+	sleep 1
+}
+
+function purge() {
+	clear
+	echo "Not yet funtional!"
+	sleep 1
 }
 
 function usage() {
@@ -333,8 +352,10 @@ do
 	fi
 	echo " 5	Umount original files"
 	echo " 6	Make chroot" 
-	echo " 7	Make squashfs" 
-	echo " 8	Make ISO"
+	echo " 7	Put new ISO version"
+	echo " 8	Purge of the 'image' directories"
+	echo " 9	Make squashfs" 
+	echo " 10	Make ISO"
 	echo " u	Usage"
 	echo " q	Exit" 
 	echo ""
@@ -347,6 +368,7 @@ do
 		4) copyto_image ;;
 		5) umount_sources ;;
 		6) chroot_image ;;
+		7) new_version ;;
 		U|u) usage ;;
 		Q|q) break ;;
 		A|a) echo "enter zip archive name (eyymmdd)" 

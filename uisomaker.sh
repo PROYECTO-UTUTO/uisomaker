@@ -259,7 +259,60 @@ function new_version() {
 
 function purge() {
 	clear
-	echo "Not yet funtional!"
+	echo "Removing unnecessary files in image"
+	for i in `ls $XS/image/ | grep -v "srv\|System.map\|system.name\|ututo.lastversion"`
+	do
+		rm -f $XS/image/$i 2>/dev/null
+	done
+	for i in `ls $XS/image/usr/portage/ | grep -v "profiles"`
+	do
+		rm -rf $XS/image/usr/portage/$i 2>/dev/null
+	done
+	rm -rf $XS/image/etc/uget/version/* 2>/dev/null
+	
+	# Verificar si esta ruta existe en una imagen limpia
+	for i in `ls $XS/image/etc/var/db/uget/ | grep -v "scripts"`
+	do
+		rm -rf $XS/image/etc/var/db/uget/$i 2>/dev/null
+	done
+	# Fin Verificar 
+	
+	rm -rf $XS/image/etc/var/db/uget/scripts/* 2>/dev/null
+	rm -rf $XS/image/proc/* 2>/dev/null
+	rm -rf $XS/image/etc/lilo.conf 2>/dev/null
+	rm -rf $XS/image/etc/skel.skel 2>/dev/null
+	cp -arf $XS/image/etc/* $XS/image/opt/stages/etc/ 2>/dev/null
+	sleep 1
+	# Punto 9 - Hacer chroot y pedir al usuario que realice el siguiente enlace simbólico:
+	#ln -s /opt/stages/etc/skel /etc/skel
+	echo "#############################################################################"
+	echo "#### Attention!!! We'll into to chroot and verify something.             ####"
+	echo "####                                                                     ####"
+	echo "#### Please, verify if the symbolic link below exists in the 'image'     ####"
+	echo "#### with the command: ls -l /etc/skel                                   ####"
+	echo "####                                                                     ####"
+	echo "#### If not exists run the command: ln -s /opt/stages/etc/skel /etc/skel ####"
+	echo "####                                                                     ####"
+	echo "#### When you done, you must exit with the command: exit                 ####"
+	echo "#############################################################################"
+	echo ""
+	echo "Press any key to coninuar."
+	read key
+	chroot_image
+	sleep 1
+	for i in `ls $XS/image/etc/cron.daily/ | grep -v "supdate-*\|ututo-*"`
+	do
+		rm -rf $XS/image/etc/cron.daily/$i 2>/dev/null
+	done
+	rm -rf $XS/image/etc/runlevels/default/syslog-ng 2>/dev/null
+	rm -rf $XS/image/etc/runlevels/default/vixie-cron 2>/dev/null
+	rm -rf $XS/image/opt/stages/etc/conf.d/local.* 2>/dev/null
+	sed -i 's/^export SSD_NICELEVEL.*/export SSD_NICELEVEL="-19"/' $XS/image/etc/rc.conf
+	sed -i 's/^export SSD_NICELEVEL.*/export SSD_NICELEVEL="-5"/' $XS/image/opt/stages/etc/rc.conf
+	echo "rc_device_tarball=\"YES\"" >> $XS/image/opt/stages/etc/rc.conf
+	clear
+	echo "Purge completed!"
+	echo ""
 	sleep 1
 }
 
@@ -369,6 +422,7 @@ do
 		5) umount_sources ;;
 		6) chroot_image ;;
 		7) new_version ;;
+		8) purge ;;
 		U|u) usage ;;
 		Q|q) break ;;
 		A|a) echo "enter zip archive name (eyymmdd)" 

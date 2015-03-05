@@ -281,7 +281,8 @@ function purge() {
 	rm -rf $XS/image/proc/* 2>/dev/null
 	rm -rf $XS/image/etc/lilo.conf 2>/dev/null
 	rm -rf $XS/image/etc/skel.skel 2>/dev/null
-	cp -arf $XS/image/etc/* $XS/image/opt/stages/etc/ 2>/dev/null
+	#cp -arf $XS/image/etc/* $XS/image/opt/stages/etc/ 2>/dev/null
+
 	sleep 1
 	# Punto 9 - Hacer chroot y pedir al usuario que realice el siguiente enlace simbólico:
 	#ln -s /opt/stages/etc/skel /etc/skel
@@ -289,9 +290,16 @@ function purge() {
 	echo "#### Attention!!! We'll into to chroot and verify something.             ####"
 	echo "####                                                                     ####"
 	echo "#### Please, verify if the symbolic link below exists in the 'image'     ####"
-	echo "#### with the command: ls -l /etc/skel                                   ####"
+	echo "#### with the command:                                                   ####"
+	echo "#### 1) ls -l /etc/skel                                                  ####"
+	echo "####   Result: /etc/skel -> /opt/stages/etc/skel                         ####"
 	echo "####                                                                     ####"
-	echo "#### If not exists run the command: ln -s /opt/stages/etc/skel /etc/skel ####"
+	echo "#### 2) ls -l /var/www/localhost/htdocs                                  ####"
+	echo "####   Result: /var/www/localhost/htdocs -> /mnt/cdrom/InstallXS/htdocs  ####"
+	echo "####                                                                     ####"
+	echo "#### If not exists run the command:                                      ####"
+	echo "#### 1) ln -s /opt/stages/etc/skel /etc/skel                             ####"
+	echo "#### 2) ln -s /mnt/cdrom/InstallXS/htdocs /var/www/localhost/htdocs      ####"
 	echo "####                                                                     ####"
 	echo "#### When you done, you must exit with the command: exit                 ####"
 	echo "#############################################################################"
@@ -306,7 +314,26 @@ function purge() {
 	done
 	rm -rf $XS/image/etc/runlevels/default/syslog-ng 2>/dev/null
 	rm -rf $XS/image/etc/runlevels/default/vixie-cron 2>/dev/null
+	rm -rf $XS/image/etc/*cfg0* 2>/dev/null
 	rm -rf $XS/image/opt/stages/etc/conf.d/local.* 2>/dev/null
+	rm -rf $XS/image/var/run/pulse/* 2>/dev/null
+	rm -rf $XS/image/root/.bash_history 2>/dev/null
+	
+	# Vaciar archivos de log
+	LIST=$(ls -R1 $XS/image/var/log | grep ':$' | sed s/\://g)
+	for F in $LIST
+	do
+		for i in `find $F -type f | grep log-`
+		do
+			rm -f $i
+		done
+		for i in `find $F -type f`
+		do
+			echo "" > $i > /dev/null
+		done
+	done
+	
+	sed -i 's/^PROCESSOR=".*/PROCESSOR="NONE"/' $XS/image/etc/uget/ututo-get.conf
 	sed -i 's/^export SSD_NICELEVEL.*/export SSD_NICELEVEL="-19"/' $XS/image/etc/rc.conf
 	sed -i 's/^export SSD_NICELEVEL.*/export SSD_NICELEVEL="-5"/' $XS/image/opt/stages/etc/rc.conf
 	echo "rc_device_tarball=\"YES\"" >> $XS/image/opt/stages/etc/rc.conf
@@ -316,9 +343,46 @@ function purge() {
 	sleep 1
 }
 
-function usage() {
-	uso="Uso:\n\nMontar: sudo bash $0 -m\nDesmontar: sudo bash $0 -d"
-	echo -e $uso
+function make_squashfs() {
+	clear
+	echo "Making squashfs"
+	rm $XS/cdimage/image.squashfs
+	sync
+	sync
+	sync
+	clear
+	mksquashfs $XS/image $XS/cdimage/image.squashfs -b 1048576 -always-use-fragments -comp xz -progress
+	echo "Done!"
+	sleep 1
+}
+
+function make_iso() {
+	clear
+	read -p "Write the ISO filename (Ej. UTUTO-XS-Custom-Vivo):	" NAMEISO
+	read -p "Write the CD name (Ej. UTUTO-XS-Custom-Vivo!):	" NAMECD
+	sync
+	sync
+	sync
+	if [[ -z `cat $WORKAREA`/$NAMEISO.iso ]]
+	then
+		echo "Deleting the old $NAMEISO.iso"
+		rm `cat $WORKAREA`/$NAMEISO.iso
+	fi
+	mkisofs -allow-limited-size -r -l -J -V $NAMECD -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
+	 -boot-load-size 4 -boot-info-table \
+	 -v -o `cat $WORKAREA`/$NAMEISO.iso $XS/cdimage
+	echo "ISO generated in `cat $WORKAREA`/$NAMEISO.iso"
+	sync
+	sync
+	sync
+	echo "Done!"
+	sleep 1
+}
+
+function help() {
+	clear
+	help="ToDo\n\n\n\nUso:\n\nMontar: sudo bash $0 -m\nDesmontar: sudo bash $0 -d"
+	echo -e $help
 }
 
 #########################
@@ -409,7 +473,8 @@ do
 	echo " 8	Purge of the 'image' directories"
 	echo " 9	Make squashfs" 
 	echo " 10	Make ISO"
-	echo " u	Usage"
+	echo " d	Delete environment"
+	echo " h	Help"
 	echo " q	Exit" 
 	echo ""
 	read -p " Option: " answer 
@@ -423,14 +488,11 @@ do
 		6) chroot_image ;;
 		7) new_version ;;
 		8) purge ;;
-		U|u) usage ;;
+		9) make_squashfs ;;
+		10) make_iso ;;
+		D|d) delete ;;
+		H|h) help ;;
 		Q|q) break ;;
-		A|a) echo "enter zip archive name (eyymmdd)" 
-		read name 
-		cd /disks/E/ 
-		zip -r /disks/G/$name.zip * 
-		cd ~/ 
-		;; 
 		*) answer=0 ;; 
 	esac  
 	echo "press RETURN for menu o 'q' for exit" 

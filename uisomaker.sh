@@ -214,7 +214,7 @@ function chroot_image() {
 	clear
 	echo "Entying to 'chroot' mode."
 	echo "When you finish, write 'exit' in the console."
-	echo "Press any key to coninuar."
+	echo "Press any key to continue."
 	read key
 	chroot $XS/image
 	clear
@@ -304,7 +304,7 @@ function purge() {
 	echo "#### When you done, you must exit with the command: exit                 ####"
 	echo "#############################################################################"
 	echo ""
-	echo "Press any key to coninuar."
+	echo "Press any key to continue."
 	read key
 	chroot_image
 	sleep 1
@@ -351,7 +351,7 @@ function make_squashfs() {
 	sync
 	sync
 	clear
-	mksquashfs $XS/image $XS/cdimage/image.squashfs -b 1048576 -always-use-fragments -comp xz -progress
+	mksquashfs $XS/image $XS/cdimage/image.squashfs -b 1048576 -always-use-fragments -comp xz
 	echo "Done!"
 	sleep 1
 }
@@ -368,7 +368,7 @@ function make_iso() {
 		echo "Deleting the old $NAMEISO.iso"
 		rm `cat $WORKAREA`/$NAMEISO.iso
 	fi
-	mkisofs -allow-limited-size -r -l -J -V $NAMECD -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
+	mkisofs -r -l -J -V $NAMECD -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
 	 -boot-load-size 4 -boot-info-table \
 	 -v -o `cat $WORKAREA`/$NAMEISO.iso $XS/cdimage
 	echo "ISO generated in `cat $WORKAREA`/$NAMEISO.iso"
